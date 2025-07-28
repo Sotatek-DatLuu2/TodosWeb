@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - All Todos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+        .table-responsive {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/all-todos-page">Admin Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/todos/todo-page">My Todos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/change-password-page">Change Password</a>
+                    </li>
+                </ul>
+                <span class="navbar-text me-3">
+                    Welcome, Admin {{ user.username }}!
+                </span>
+                <button class="btn btn-outline-light" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0 text-center">All Todos in System</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Priority</th>
+                                <th>Complete</th>
+                                <th>Owner ID</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTodosTableBody">
+                            {% for todo in todos %}
+                            <tr>
+                                <td>{{ todo.id }}</td>
+                                <td>{{ todo.title }}</td>
+                                <td>{{ todo.description }}</td>
+                                <td>{{ todo.priority }}</td>
+                                <td>
+                                    {% if todo.complete %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ todo.owner_id }}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm delete-admin-todo-btn" data-todo-id="{{ todo.id }}">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if not todos %}
+                <div class="alert alert-info text-center" role="alert">
+                    No todos found in the system.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="/static/js/base.js"></script>
+    <script>
+        // JavaScript cho chức năng xóa Todo của Admin
+        document.querySelectorAll('.delete-admin-todo-btn').forEach(button => {
+            button.addEventListener('click', async function() {
+                const todoId = this.dataset.todoId;
+                if (confirm(`Are you sure you want to delete Todo ID: ${todoId}? This action cannot be undone.`)) {
+                    try {
+                        const token = getCookie('access_token');
+                        if (!token) {
+                            throw new Error('Authentication token not found');
+                        }
+
+                        const response = await fetch(`/admin/todo/${todoId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+
+                        if (response.ok) {
+                            alert('Todo deleted successfully!');
+                            window.location.reload(); // Tải lại trang để cập nhật danh sách
+                        } else {
+                            const errorData = await response.json();
+                            alert(`Error: ${errorData.detail || 'Failed to delete todo.'}`);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the todo. Please try again.');
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

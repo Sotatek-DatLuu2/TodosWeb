@@ -1,55 +1,161 @@
-{% include 'layout.html' %}
-
-<div class="container">
-    <div class="card text-center">
-        <div class="card-header">
-            Your Todo's
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Todos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        .btn-info:hover {
+            background-color: #117a8b;
+            border-color: #106c7a;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background-color: #e0a800;
+            border-color: #d39e00;
+        }
+        .badge-success {
+            background-color: #28a745;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        /* Thêm style cho strike-through-td nếu chưa có */
+        .strike-through-td {
+            text-decoration: line-through;
+            color: #6c757d; /* Màu xám cho text đã gạch ngang */
+        }
+        .pointer {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/todos/todo-page">My Todos App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/todos/add-todo-page">Add New Todo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/auth/change-password-page">Change Password</a> {# Link đổi mật khẩu cho cả user và admin #}
+                    </li>
+                    {% if user and user.user_role == 'admin' %} {# Hiển thị link này chỉ cho admin #}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/all-todos-page">Admin Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/users-page">User Management</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <span class="navbar-text me-3">
+                    Welcome, {% if user %}{{ user.username }}! (Role: {{ user.user_role }}){% else %}Guest!{% endif %}
+                </span>
+                <button class="btn btn-outline-light" onclick="logout()">Logout</button>
+            </div>
         </div>
-        <div class="card-body">
-            <h5 class="card-title">
-                List of your todo's!
-            </h5>
-            <p class="card-text">
-                Information regarding stuff that need to be complete.
-            </p>
+    </nav>
 
-            <table class="table table-hover">
-                <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Info</th>
-                    <th scope="col">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for todo in todos %}
-                {% if todo.complete == False %}
-                <tr class="pointer">
-                    <td>{{loop.index}}</td>
-                    <td>{{todo.title}}</td>
-                    <td>
-                        <button onclick="window.location.href='edit-todo-page/{{todo.id}}'"
-                                type="button" class="btn btn-info">
-                            Edit
-                        </button>
-                    </td>
-                </tr>
-                {% else %}
-                <tr class="pointer">
-                    <td>{{loop.index}}</td>
-                    <td class="strike-through-td">{{todo.title}}</td>
-                    <td>
-                        <button onclick="window.location.href='edit-todo-page/{{todo.id}}'"
-                                type="button" class="btn btn-info">
-                            Edit
-                        </button>
-                    </td>
-                </tr>
+    <div class="container">
+        <div class="card text-center">
+            <div class="card-header">
+                Your Todo's
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">
+                    List of your todo's!
+                </h5>
+                <p class="card-text">
+                    Information regarding stuff that need to be complete.
+                </p>
+
+                <div class="table-responsive"> {# Thêm div này để bảng responsive hơn #}
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Info</th>
+                                <th scope="col">Priority</th> {# Thêm cột Priority #}
+                                <th scope="col">Complete</th> {# Thêm cột Complete #}
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for todo in todos %}
+                            <tr>
+                                <td>{{loop.index}}</td>
+                                <td {% if todo.complete == True %}class="strike-through-td"{% endif %}>{{todo.title}}</td>
+                                <td>{{todo.priority}}</td> {# Hiển thị Priority #}
+                                <td>
+                                    {% if todo.complete %}
+                                        <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button onclick="window.location.href='/todos/edit-todo-page/{{todo.id}}'"
+                                            type="button" class="btn btn-info">
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if not todos %}
+                <div class="alert alert-info text-center" role="alert">
+                    You have no todos.
+                </div>
                 {% endif %}
-                {% endfor %}
-                </tbody>
-            </table>
-            <a href="add-todo-page" class="btn btn-primary">Add a new todo!</a>
+                <a href="/todos/add-todo-page" class="btn btn-primary">Add a new todo!</a>
+            </div>
         </div>
     </div>
-</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="/static/js/base.js"></script>
+</body>
+</html>

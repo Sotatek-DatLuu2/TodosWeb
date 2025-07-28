@@ -6,7 +6,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: "postgresql+psycopg2://postgres:123456@db:5432/Todosapp"
+      DATABASE_URL: "postgresql+asyncpg://postgres:123456@db:5432/Todosapp"
 
   db:
     image: postgres:13

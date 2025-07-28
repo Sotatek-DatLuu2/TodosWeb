@@ -1,10 +1,12 @@
 from datetime import timedelta, datetime
+from typing import Annotated, Union
+
+from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt, JWTError
 from passlib.context import CryptContext
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends, Request
 import smtplib
 from email.mime.text import MIMEText
-from uuid import uuid4
 from config import settings
 
 # Cấu hình JWT
@@ -86,3 +88,6 @@ def send_password_reset_email(email_to: str, user_first_name: str, token: str):
         print(f"Error sending email: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail="Failed to send password reset email. Please try again later.")
+
+
+
