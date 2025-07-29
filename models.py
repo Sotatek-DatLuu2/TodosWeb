@@ -14,11 +14,11 @@ class Users(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     role = Column(String)
-    phone_number = Column(String)
+    phone_number = Column(String, nullable=True)
 
     # Thêm mối quan hệ với PasswordResetToken
     reset_tokens = relationship("PasswordResetToken", back_populates="user")
-    todos = relationship("Todos", back_populates="owner") # Đảm bảo mối quan hệ này cũng có
+    todos = relationship("Todos", back_populates="owner")
 
 class Todos(Base):
     __tablename__ = 'todos'
@@ -40,6 +40,6 @@ class PasswordResetToken(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     token = Column(String, unique=True, index=True, nullable=False)
     expires_at = Column(DateTime, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow())
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("Users", back_populates="reset_tokens")

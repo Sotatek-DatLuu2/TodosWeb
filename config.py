@@ -1,8 +1,9 @@
-
+from pydantic import EmailStr, Field
 
 from enum import StrEnum
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 
 class ServerEnv(StrEnum):
@@ -33,10 +34,17 @@ class CustomBaseSettings(BaseSettings):
 class Config(CustomBaseSettings):
     ENVIRONMENT: ServerEnv = ServerEnv.LOCAL
     SECRET_KEY: str
-    EMAIL_ADDRESS: str
+    EMAIL_ADDRESS: EmailStr
     EMAIL_PASSWORD: str
     SMTP_HOST: str
     SMTP_PORT: int
     DATABASE_URL: str
+
+    DEFAULT_ADMIN_USERNAME: str
+    DEFAULT_ADMIN_EMAIL: EmailStr
+    DEFAULT_ADMIN_FIRST_NAME: str
+    DEFAULT_ADMIN_LAST_NAME: str
+    DEFAULT_ADMIN_PASSWORD: str
+    DEFAULT_ADMIN_PHONE_NUMBER: str
 
 settings = Config()

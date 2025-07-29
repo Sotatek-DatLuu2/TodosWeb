@@ -9,7 +9,7 @@ class CreateUserRequest(BaseModel):
     first_name: str
     last_name: str
     password: str = Field(..., min_length=8)
-    role: str
+    role: str = 'user'
     phone_number: str
 
 
@@ -55,3 +55,9 @@ class UserUpdateAdminRequest(BaseModel):
     is_active: Optional[bool] = None
     phone_number: Optional[str] = None
 
+
+class UserUpdateRequest(BaseModel):
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone_number: Optional[str] = None

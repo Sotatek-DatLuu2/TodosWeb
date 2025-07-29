@@ -1,14 +1,14 @@
-from typing import Annotated, List
+from typing import  List
 from fastapi import APIRouter, Depends, HTTPException, Path, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
-from database import get_db
+from database import db_dependency
 from models import Todos, Users
 from modules.auth_modules.auth_crud import (
     get_all_users, get_user_detail_by_id, update_user_by_admin, delete_user_by_admin
 )
 from modules.auth_modules.auth_schemas import UserResponse, UserUpdateAdminRequest
-from routers.auth import user_dependency, api_user_dependency  # Import cả hai user_dependency và api_user_dependency
+from routers.auth import user_dependency, api_user_dependency
 from fastapi.templating import Jinja2Templates
 
 router = APIRouter(
@@ -16,12 +16,11 @@ router = APIRouter(
     tags=['admin']
 )
 
-db_dependency = Annotated[AsyncSession, Depends(get_db)]
-
 templates = Jinja2Templates(directory="templates")
 
 
 # --- Page Routes ---
+
 
 @router.get("/all-todos-page")
 async def render_admin_all_todos_page(request: Request, db: db_dependency,

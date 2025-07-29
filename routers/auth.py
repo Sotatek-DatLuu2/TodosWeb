@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from fastapi.templating import Jinja2Templates
-from database import get_db
+from database import db_dependency
 from modules.auth_modules.auth_schemas import (
     CreateUserRequest, Token, ForgotPasswordRequest,
     ResetPasswordRequest, ChangePasswordRequest
@@ -27,8 +27,6 @@ router = APIRouter(
 
 # OAuth2PasswordBearer này vẫn sẽ được dùng cho API endpoint.
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
-
-db_dependency = Annotated[AsyncSession, Depends(get_db)]
 
 templates = Jinja2Templates(directory="templates")
 

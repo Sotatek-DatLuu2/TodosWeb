@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from models import Users, PasswordResetToken
-from modules.auth_modules.auth_schemas import CreateUserRequest
+from modules.auth_modules.auth_schemas import CreateUserRequest, UserUpdateRequest, UserUpdateAdminRequest
 from modules.auth_modules.auth_utils import get_password_hash
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -25,7 +25,7 @@ async def create_user(db: AsyncSession, user_data: CreateUserRequest):
         username=user_data.username,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
-        role=user_data.role,
+        role=user_data.role,  # Mặc định là user
         hashed_password=hashed_password,
         is_active=True,
         phone_number=user_data.phone_number
@@ -61,10 +61,18 @@ async def delete_password_reset_token_entry(db: AsyncSession, token_entry: Passw
 
 async def update_user_password(db: AsyncSession, user: Users, new_password: str):
     user.hashed_password = get_password_hash(new_password)
-    db.add(user)
+    # db.add(user)
     await db.commit()
     await db.refresh(user)
     return user
+
+
+async def update_user_profile(db: AsyncSession, user_model: Users, user_data: UserUpdateRequest):
+    for field, value in user_data.model_dump(exclude_unset=True).items():
+        setattr(user_model, field, value)
+    await db.commit()
+    await db.refresh(user_model)
+    return user_model
 
 
 async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 100):
@@ -78,7 +86,7 @@ async def get_user_detail_by_id(db: AsyncSession, user_id: int):
 async def update_user_by_admin(db: AsyncSession, user_model: Users, user_data):
     for field, value in user_data.model_dump(exclude_unset=True).items():
         setattr(user_model, field, value)
-    db.add(user_model)
+    # db.add(user_model)
     await db.commit()
     await db.refresh(user_model)
     return user_model
