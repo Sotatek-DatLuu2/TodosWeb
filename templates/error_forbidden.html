@@ -1,0 +1,22 @@
+{% include 'layout.html' %}
+
+<div class="container mt-5">
+    <div class="card text-center border-danger">
+        <div class="card-header bg-danger text-white">
+            <h3>Access Denied - 403 Forbidden</h3>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title text-danger">You do not have permission to access this page.</h5>
+            <p class="card-text">
+                This resource is restricted. Please ensure you have the necessary permissions.
+            </p>
+            {% if detail %}
+            <p class="card-text text-muted">
+                {{ detail }}
+            </p>
+            {% endif %}
+            <a href="/todos/todo-page" class="btn btn-primary mt-3">Go to My Todos</a>
+            <a href="/auth/login-page" class="btn btn-secondary mt-3 ms-2">Login Page</a>
+        </div>
+    </div>
+</div>

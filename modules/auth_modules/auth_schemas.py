@@ -56,8 +56,9 @@ class UserUpdateAdminRequest(BaseModel):
     phone_number: Optional[str] = None
 
 
-class UserUpdateRequest(BaseModel):
+class UserProfileUpdateRequest(BaseModel):
     email: Optional[EmailStr] = None
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     phone_number: Optional[str] = None

@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from database import db_dependency
 from modules.auth_modules.auth_schemas import (
     CreateUserRequest, Token, ForgotPasswordRequest,
-    ResetPasswordRequest, ChangePasswordRequest
+    ResetPasswordRequest, ChangePasswordRequest, UserProfileUpdateRequest, UserResponse
 )
 from modules.auth_modules.auth_utils import (
     verify_password, create_access_token, decode_access_token,
@@ -17,7 +17,7 @@ from modules.auth_modules.auth_crud import (
     get_user_by_username, get_user_by_email, create_user,
     save_password_reset_token, get_password_reset_token_entry,
     delete_password_reset_token_entry, update_user_password,
-    get_user_by_id
+    get_user_by_id, update_user_profile
 )
 
 router = APIRouter(
@@ -25,7 +25,6 @@ router = APIRouter(
     tags=['auth']
 )
 
-# OAuth2PasswordBearer này vẫn sẽ được dùng cho API endpoint.
 oauth2_bearer = OAuth2PasswordBearer(tokenUrl='auth/token')
 
 templates = Jinja2Templates(directory="templates")
@@ -93,10 +92,21 @@ async def render_forgot_password_page(request: Request):
 async def render_reset_password_page(request: Request):
     return templates.TemplateResponse("reset_password.html", {"request": request})
 
-
 @router.get("/change-password-page")
 async def render_change_password_page(request: Request, user: user_dependency):
     return templates.TemplateResponse("change_password.html", {"request": request, "user": user})
+
+
+@router.get("/profile-page")
+async def render_user_profile_page(request: Request, db: db_dependency, user: user_dependency):
+    user_id = user.get("id")
+    current_user_data = await get_user_by_id(db, user_id)
+    if not current_user_data:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    user_response = UserResponse.model_validate(current_user_data)
+    return templates.TemplateResponse("user_profile.html", {"request": request, "user": user_response})
+
 
 
 # --- API Endpoints ---
@@ -168,7 +178,7 @@ async def reset_password_endpoint(request: ResetPasswordRequest, db: db_dependen
 async def change_password_endpoint(
         request: ChangePasswordRequest,
         db: db_dependency,
-        current_user: api_user_dependency  # Đã thay đổi sang api_user_dependency vì đây là API endpoint
+        current_user: api_user_dependency
 ):
     user_id = current_user.get("id")
     user = await get_user_by_id(db, user_id)
@@ -182,3 +192,31 @@ async def change_password_endpoint(
     await update_user_password(db, user, request.new_password)
 
     return {"message": "Password has been changed successfully."}
+
+
+@router.put("/profile", status_code=status.HTTP_200_OK, response_model=UserResponse)
+async def update_user_profile_api(
+        profile_data: UserProfileUpdateRequest,
+        db: db_dependency,
+        current_user: api_user_dependency
+):
+    user_id = current_user.get("id")
+    user_model = await get_user_by_id(db, user_id)
+
+    if not user_model:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    # Kiểm tra xem username hoặc email mới có bị trùng không (trừ chính người dùng đó)
+    if profile_data.username and profile_data.username != user_model.username:
+        existing_user_by_username = await get_user_by_username(db, profile_data.username)
+        if existing_user_by_username and existing_user_by_username.id != user_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken.")
+
+    if profile_data.email and profile_data.email != user_model.email:
+        existing_user_by_email = await get_user_by_email(db, profile_data.email)
+        if existing_user_by_email and existing_user_by_email.id != user_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already taken.")
+
+    updated_user = await update_user_profile(db, user_model, profile_data)
+    return UserResponse.model_validate(updated_user)  # Trả về UserResponse đã cập nhật
+

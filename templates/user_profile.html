@@ -1,0 +1,101 @@
+{% extends 'layout.html' %} {# Kế thừa từ layout.html #}
+
+{% block title %}My Profile{% endblock %} {# Đặt tiêu đề riêng cho trang #}
+
+{% block content %} {# Khối nội dung riêng của trang #}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2 class="mb-0">My Profile</h2>
+                </div>
+                <div class="card-body">
+                    <form id="profileUpdateForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name if user.last_name else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ user.phone_number if user.phone_number else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Role</label>
+                            <input type="text" class="form-control" id="role" name="role" value="{{ user.role }}" readonly>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {{ 'checked' if user.is_active else '' }} disabled>
+                            <label class="form-check-label" for="is_active">Active Account</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-3">Update Profile</button>
+                    </form>
+                    <a href="/auth/change-password-page" class="btn btn-secondary w-100">Change Password</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript cụ thể cho trang profile (chỉ còn logic cập nhật hồ sơ)
+        const profileUpdateForm = document.getElementById('profileUpdateForm');
+        if (profileUpdateForm) {
+            profileUpdateForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                const form = event.target;
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                const payload = {
+                    username: data.username,
+                    email: data.email,
+                    first_name: data.first_name,
+                    last_name: data.last_name,
+                    phone_number: data.phone_number || null
+                };
+
+                try {
+                    // Sử dụng getCookie() từ base.js
+                    const token = getCookie('access_token');
+                    if (!token) {
+                        throw new Error('Authentication token not found');
+                    }
+
+                    const response = await fetch('/auth/profile', { // Endpoint này cần được xử lý trong router/auth.py hoặc router/user.py
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const updatedUser = await response.json();
+                        alert('Profile updated successfully!');
+                        // Tùy chọn: Cập nhật UI với dữ liệu mới nếu cần, hoặc tải lại trang
+                        // window.location.reload();
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Error updating profile: ${errorData.detail || response.statusText}`);
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating profile. Please try again.');
+                }
+            });
+        }
+    </script>
+{% endblock %} {# Kết thúc khối nội dung #}

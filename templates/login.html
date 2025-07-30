@@ -1,32 +1,32 @@
-{% include 'layout.html' %}
+{% extends 'layout.html' %} {# Kế thừa từ layout.html #}
 
-<div class="container">
-    <div class="card">
-        <div class="card-header">
-            Login
-        </div>
-        <div class="card-body">
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Username</label>
-                    <input type="text" class="form-control" name="username" autocomplete="username" required>
+{% block title %}Login{% endblock %} {# Đặt tiêu đề riêng cho trang #}
+
+{% block content %} {# Khối nội dung riêng của trang #}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0 text-center">Login</h2>
                 </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" class="form-control" name="password" autocomplete="current-password" required>
+                <div class="card-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Login</button>
+                    </form>
+                    <div class="text-center">
+                        <a href="/auth/register-page" class="d-block mb-1">Don't have an account? Register here.</a>
+                        <a href="/auth/forgot-password-page" class="d-block">Forgot your password?</a>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Login</button>
-            </form>
-        </div>
-        <div class="card-footer text-muted d-flex justify-content-between align-items-center">
-            <div>
-                <a href="/auth/register-page">Register?</a>
-            </div>
-            <div>
-                <a href="/auth/forgot-password-page">Forgot password?</a>
-<!--                <span class="mx-2">|</span>-->
-<!--                <a href="/auth/change-password-page">Change password?</a>-->
             </div>
         </div>
     </div>
-</div>
+{% endblock %} {# Kết thúc khối nội dung #}

@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from models import Users, PasswordResetToken
-from modules.auth_modules.auth_schemas import CreateUserRequest, UserUpdateRequest, UserUpdateAdminRequest
+from modules.auth_modules.auth_schemas import CreateUserRequest, UserProfileUpdateRequest, UserUpdateAdminRequest
 from modules.auth_modules.auth_utils import get_password_hash
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -67,21 +67,15 @@ async def update_user_password(db: AsyncSession, user: Users, new_password: str)
     return user
 
 
-async def update_user_profile(db: AsyncSession, user_model: Users, user_data: UserUpdateRequest):
-    for field, value in user_data.model_dump(exclude_unset=True).items():
-        setattr(user_model, field, value)
-    await db.commit()
-    await db.refresh(user_model)
-    return user_model
-
-
 async def get_all_users(db: AsyncSession, skip: int = 0, limit: int = 100):
     result = await db.execute(select(Users).offset(skip).limit(limit))
     return result.scalars().all()
 
+
 async def get_user_detail_by_id(db: AsyncSession, user_id: int):
     result = await db.execute(select(Users).filter(Users.id == user_id))
     return result.scalars().first()
+
 
 async def update_user_by_admin(db: AsyncSession, user_model: Users, user_data):
     for field, value in user_data.model_dump(exclude_unset=True).items():
@@ -91,7 +85,17 @@ async def update_user_by_admin(db: AsyncSession, user_model: Users, user_data):
     await db.refresh(user_model)
     return user_model
 
+
 async def delete_user_by_admin(db: AsyncSession, user_model: Users):
     await db.delete(user_model)
     await db.commit()
 
+
+async def update_user_profile(db: AsyncSession, user_model: Users, profile_data: UserProfileUpdateRequest):
+    # Chỉ cập nhật các trường được phép và có giá trị trong request
+    for field, value in profile_data.model_dump(exclude_unset=True).items():
+        setattr(user_model, field, value)
+    db.add(user_model)
+    await db.commit()
+    await db.refresh(user_model)
+    return user_model
