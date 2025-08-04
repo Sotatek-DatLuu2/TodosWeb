@@ -3,7 +3,7 @@ from routers import auth, todos, admin
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 
-from database import init_db_async
+
 from services.initial_setup import seed_initial_admin_user
 
 app = FastAPI()
