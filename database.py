@@ -36,7 +36,3 @@ async def get_db():
 db_dependency = Annotated[AsyncSession, Depends(get_db)]
 
 
-async def init_db_async():
-    async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print("Database tables created or updated successfully!")

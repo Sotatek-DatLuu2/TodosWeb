@@ -31,7 +31,7 @@ templates = Jinja2Templates(directory="templates")
 
 
 # --- AUTHENTICATION DEPENDENCIES ---
-# Hàm này sẽ được dùng cho các Page Routes (trả về HTML)
+
 # Nó sẽ đọc token từ cookie
 async def get_user_from_request(request: Request) -> dict:
     token_from_cookie = request.cookies.get("access_token")
@@ -66,7 +66,7 @@ api_user_dependency = Annotated[dict, Depends(get_authenticated_api_user)]
 # --- AUTHENTICATE USER FUNCTION (Bổ sung vào đây) ---
 # Hàm này dùng để xác thực username/password với database
 async def authenticate_user(username: str, password: str, db: AsyncSession):
-    user = await get_user_by_username(db, username)  # Gọi hàm CRUD từ auth_crud
+    user = await get_user_by_username(db, username)
     if not user or not user.is_active or not verify_password(password, user.hashed_password):
         return False
     return user

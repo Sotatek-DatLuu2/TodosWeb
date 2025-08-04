@@ -12,7 +12,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.on_event("startup")
 async def startup_event():
-    await init_db_async()
     await seed_initial_admin_user()
 
 
