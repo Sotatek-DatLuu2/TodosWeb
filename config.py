@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from pydantic import EmailStr, Field
 
 from enum import StrEnum
@@ -46,5 +48,18 @@ class Config(CustomBaseSettings):
     DEFAULT_ADMIN_LAST_NAME: str
     DEFAULT_ADMIN_PASSWORD: str
     DEFAULT_ADMIN_PHONE_NUMBER: str
+
+    CORS_ORIGINS: List[str] = Field(
+        default=["http://localhost:3000", "http://localhost:5173"],  # Giá trị mặc định cho phát triển
+        description="Danh sách các nguồn gốc (origins) được phép cho CORS."
+    )
+    CORS_ORIGIN_REGEX: Optional[str] = Field(
+        default=None,
+        description="Regex cho các nguồn gốc được phép cho CORS."
+    )
+    CORS_HEADERS: List[str] = Field(
+        default=["Content-Type", "Authorization"],
+        description="Danh sách các HTTP headers được phép cho CORS."
+    )
 
 settings = Config()
