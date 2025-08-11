@@ -19,4 +19,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 ENV PATH="/app/.venv/bin:$PATH"
 ENTRYPOINT []
 
-CMD ["fastapi", "run", "--host", "0.0.0.0", "main.py"]
+CMD ["fastapi", "run", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*", "main.py"]
