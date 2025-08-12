@@ -1,0 +1,71 @@
+name: CI/CD Pipeline for TodosWeb
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  DOCKER_IMAGE_NAME: docker_todos-app # Tên cho Docker image của ứng dụng của bạn
+  DOCKER_HUB_USERNAME: luutiendat # <-- THAY THẾ BẰNG USERNAME DOCKER HUB CỦA BẠN
+  DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}     # Sử dụng secret Docker Hub Token đã tạo
+  EC2_HOST: ${{ secrets.EC2_HOST }}                     # Sử dụng secret EC2 Host đã tạo
+  EC2_USER: ubuntu                                      # Tên user mặc định của EC2 (thường là ubuntu cho AMI Ubuntu)
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}       # Sử dụng secret SSH Private Key đã tạo (Base64)
+  PROJECT_PATH: ~/TodosWeb                              # Đường dẫn đến thư mục dự án trên EC2
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # Job này sẽ chạy trên một môi trường Ubuntu mới nhất được cung cấp bởi GitHub
+
+    steps:
+      - name: Checkout code # Bước 1: Kéo mã nguồn của repository về môi trường GitHub Actions
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub # Bước 2: Đăng nhập vào Docker Hub để có thể đẩy image lên
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_HUB_USERNAME }}
+          password: ${{ env.DOCKER_HUB_TOKEN }}
+
+      - name: Build Docker image # Bước 3: Xây dựng Docker image cho ứng dụng TodosWeb của bạn
+        run: |
+          docker build -t ${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE_NAME}:latest .
+          # Lệnh này sẽ build Docker image từ Dockerfile trong thư mục hiện tại
+          # và đặt tag là 'latest' với tên người dùng Docker Hub của bạn và tên image đã định nghĩa.
+
+      - name: Push Docker image # Bước 4: Đẩy Docker image vừa build lên Docker Hub
+        run: docker push ${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE_NAME}:latest
+          # Image này sau đó sẽ được EC2 kéo về.
+
+      - name: Deploy to EC2 # Bước 5: Triển khai ứng dụng lên EC2 instance của bạn
+        uses: appleboy/ssh-action@v1.0.3 # Sử dụng action SSH để kết nối và chạy lệnh trên EC2
+        with:
+          host: ${{ env.EC2_HOST }}       # Địa chỉ IP/DNS của EC2 từ secret
+          username: ${{ env.EC2_USER }}   # Username để SSH vào EC2
+          key: ${{ env.SSH_PRIVATE_KEY }} # Private SSH key từ secret
+          script: |
+            echo "Đang triển khai ứng dụng TodosWeb..."
+            cd ${{ env.PROJECT_PATH }} # Di chuyển vào thư mục dự án trên EC2
+
+            # Cập nhật mã nguồn mới nhất từ GitHub
+            # Điều này quan trọng để đảm bảo docker-compose.yml và các file cấu hình khác trên EC2 là phiên bản mới nhất.
+            git pull origin main
+
+            # Kéo Docker image mới nhất từ Docker Hub về EC2
+            docker pull ${DOCKER_HUB_USERNAME}/${DOCKER_IMAGE_NAME}:latest
+
+            # Dừng và xóa tất cả các container cũ đã chạy bằng docker-compose
+            docker compose down
+
+            # Khởi tạo lại và khởi động các container mới với image vừa kéo về
+            # Docker Compose sẽ sử dụng image: your_docker_hub_username/lild-todosweb:latest đã được pull.
+            docker compose up -d
+
+            # Khởi động lại Nginx để đảm bảo nó phục vụ ứng dụng mới
+            sudo systemctl restart nginx
+
+            echo "Triển khai TodosWeb hoàn tất!"
